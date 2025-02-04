@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table"
 import { pb } from "@/lib/pocketbase"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -186,11 +187,12 @@ const columns: ColumnDef<User>[] = [
               </SheetDescription>
             </SheetHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
+  
+                <Label htmlFor="exp_time">过期时间</Label>
                 <Input
                   id="exp_time"
                   type="datetime-local"
-                  className="col-span-3"
+                  className="flex-1"
                   defaultValue={new Date(user.exp_time).toISOString().slice(0, 16)}
                   onChange={async (e) => {
                     try {
@@ -204,7 +206,6 @@ const columns: ColumnDef<User>[] = [
                     }
                   }}
                 />
-              </div>
             </div>
           </SheetContent>
         </Sheet>
