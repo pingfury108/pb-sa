@@ -17,6 +17,10 @@ const navigation = [
     title: "设置",
     href: "/settings",
   },
+  {
+    title: "百度教育AI助手",
+    href: "/bedu",
+  },
 ];
 
 export function MainNav() {
