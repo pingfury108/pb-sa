@@ -301,8 +301,10 @@ export default function BeduPage() {
   useEffect(() => {
     async function fetchUsers() {
       try {
-        const records = await pb.collection('baidu_edu_users').getList(1, 50)
-        const mappedUsers = records.items.map(record => ({
+        const records = await pb.collection('baidu_edu_users').getFullList({
+          sort: '-created' // 按创建时间倒序
+        });
+        const mappedUsers = records.map(record => ({
           id: record.id,
           name: record.name,
           remark: record.remark,
@@ -358,7 +360,7 @@ export default function BeduPage() {
   }
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto">
       <div className="flex items-center py-4 gap-4">
         <Input
           placeholder="搜索 ID/用户名/备注..."
