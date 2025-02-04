@@ -212,8 +212,44 @@ const columns: ColumnDef<User>[] = [
                     min="1"
                     defaultValue="1"
                     className="w-20"
+                    onChange={(e) => {
+                      const days = parseInt(e.target.value);
+                      const expDate = document.getElementById('exp-date');
+                      if (expDate && !isNaN(days)) {
+                        const currentTime = new Date();
+                        const userExpTime = new Date(user.exp_time);
+                        const newExpTime = new Date(
+                          userExpTime > currentTime
+                            ? userExpTime.getTime() + days * 24 * 60 * 60 * 1000
+                            : currentTime.getTime() + days * 24 * 60 * 60 * 1000
+                        );
+                        expDate.textContent = newExpTime.toLocaleString('zh-CN', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                          hour12: false
+                        }).replace(/\//g, '-');
+                      }
+                    }}
                   />
                   <span>天</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>到期时间</Label>
+                <div id="exp-date" className="text-sm">
+                  {new Date(user.exp_time).toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                  }).replace(/\//g, '-')}
                 </div>
               </div>
               <Button
