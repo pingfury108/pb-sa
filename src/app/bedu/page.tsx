@@ -23,6 +23,14 @@ import {
 } from "@tanstack/react-table"
 import { ArrowUpDown, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 interface User {
   id: string
@@ -157,6 +165,50 @@ const columns: ColumnDef<User>[] = [
         second: '2-digit',
         hour12: false
       }).replace(/\//g, '-')
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const user = row.original
+      return (
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm">
+              续费
+            </Button>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>续费用户</SheetTitle>
+              <SheetDescription>
+                修改用户 {user.name} 的信息
+              </SheetDescription>
+            </SheetHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Input
+                  id="exp_time"
+                  type="datetime-local"
+                  className="col-span-3"
+                  defaultValue={new Date(user.exp_time).toISOString().slice(0, 16)}
+                  onChange={async (e) => {
+                    try {
+                      await pb.collection('baidu_edu_users').update(user.id, {
+                        exp_time: new Date(e.target.value).toISOString(),
+                      })
+                      // Refresh the page to show updated data
+                      window.location.reload()
+                    } catch (error) {
+                      console.error('Error updating user:', error)
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      )
     },
   },
 ]
