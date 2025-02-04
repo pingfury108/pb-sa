@@ -187,25 +187,63 @@ const columns: ColumnDef<User>[] = [
               </SheetDescription>
             </SheetHeader>
             <div className="grid gap-4 py-4">
-  
+              <div className="space-y-2">
                 <Label htmlFor="exp_time">过期时间</Label>
                 <Input
                   id="exp_time"
                   type="datetime-local"
-                  className="flex-1"
+                  className="w-full"
                   defaultValue={new Date(user.exp_time).toISOString().slice(0, 16)}
                   onChange={async (e) => {
                     try {
                       await pb.collection('baidu_edu_users').update(user.id, {
                         exp_time: new Date(e.target.value).toISOString(),
                       })
-                      // Refresh the page to show updated data
                       window.location.reload()
                     } catch (error) {
                       console.error('Error updating user:', error)
                     }
                   }}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="days">续费天数</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="days"
+                    type="number"
+                    min="1"
+                    defaultValue="1"
+                    className="w-20"
+                  />
+                  <Button
+                    onClick={async () => {
+                      const daysInput = document.getElementById('days') as HTMLInputElement;
+                      const days = parseInt(daysInput.value);
+                      if (isNaN(days) || days < 1) return;
+                      
+                      const currentTime = new Date();
+                      const userExpTime = new Date(user.exp_time);
+                      const newExpTime = new Date(
+                        userExpTime > currentTime 
+                          ? userExpTime.getTime() + days * 24 * 60 * 60 * 1000
+                          : currentTime.getTime() + days * 24 * 60 * 60 * 1000
+                      );
+                      
+                      try {
+                        await pb.collection('baidu_edu_users').update(user.id, {
+                          exp_time: newExpTime.toISOString(),
+                        });
+                        window.location.reload();
+                      } catch (error) {
+                        console.error('Error updating user:', error);
+                      }
+                    }}
+                  >
+                    续费
+                  </Button>
+                </div>
+              </div>
             </div>
           </SheetContent>
         </Sheet>
