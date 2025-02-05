@@ -1,6 +1,6 @@
 import PocketBase from 'pocketbase';
 
-export const pb = new PocketBase('http://192.168.31.95:8090');
+export const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL || 'http://192.168.31.95:8090');
 
 // 启用自动 cookie 处理
 pb.autoCancellation(false);
