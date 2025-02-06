@@ -361,96 +361,102 @@ export default function BeduPage() {
 
   return (
     <div className="container mx-auto">
-      <div className="flex items-center py-4 gap-4">
-        <Input
-          placeholder="搜索 ID/用户名/备注..."
-          value={globalFilter}
-          onChange={(event) => setGlobalFilter(event.target.value)}
-          className="max-w-sm"
-        />
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm">添加用户</Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>添加新用户</SheetTitle>
-              <SheetDescription>
-                创建新的百度教育用户
-              </SheetDescription>
-            </SheetHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">用户名</Label>
-                <Input id="name" className="w-full" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="remark">备注</Label>
-                <Input id="remark" className="w-full" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="exp_time">过期时间</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="days"
-                    type="number"
-                    min="1"
-                    defaultValue="1"
-                    className="w-20"
-                  />
-                  <span>天</span>
+      <div className="sticky top-0 bg-background z-10">
+        <div className="flex items-center py-4 gap-4">
+          <Input
+            placeholder="搜索 ID/用户名/备注..."
+            value={globalFilter}
+            onChange={(event) => setGlobalFilter(event.target.value)}
+            className="max-w-sm"
+          />
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm">添加用户</Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>添加新用户</SheetTitle>
+                <SheetDescription>
+                  创建新的百度教育用户
+                </SheetDescription>
+              </SheetHeader>
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">用户名</Label>
+                  <Input id="name" className="w-full" />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="remark">备注</Label>
+                  <Input id="remark" className="w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="exp_time">过期时间</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="days"
+                      type="number"
+                      min="1"
+                      defaultValue="1"
+                      className="w-20"
+                    />
+                    <span>天</span>
+                  </div>
+                </div>
+                <Button
+                  onClick={async () => {
+                    const nameInput = document.getElementById('name') as HTMLInputElement;
+                    const remarkInput = document.getElementById('remark') as HTMLInputElement;
+                    const daysInput = document.getElementById('days') as HTMLInputElement;
+                    const days = parseInt(daysInput.value);
+                    
+                    if (isNaN(days) || days < 1) return;
+                    
+                    const expTime = new Date();
+                    expTime.setDate(expTime.getDate() + days);
+                    
+                    try {
+                      await pb.collection('baidu_edu_users').create({
+                        name: nameInput.value,
+                        remark: remarkInput.value,
+                        exp_time: expTime.toISOString(),
+                      });
+                      window.location.reload();
+                    } catch (error) {
+                      console.error('Error creating user:', error);
+                    }
+                  }}
+                >
+                  创建用户
+                </Button>
               </div>
-              <Button
-                onClick={async () => {
-                  const nameInput = document.getElementById('name') as HTMLInputElement;
-                  const remarkInput = document.getElementById('remark') as HTMLInputElement;
-                  const daysInput = document.getElementById('days') as HTMLInputElement;
-                  const days = parseInt(daysInput.value);
-                  
-                  if (isNaN(days) || days < 1) return;
-                  
-                  const expTime = new Date();
-                  expTime.setDate(expTime.getDate() + days);
-                  
-                  try {
-                    await pb.collection('baidu_edu_users').create({
-                      name: nameInput.value,
-                      remark: remarkInput.value,
-                      exp_time: expTime.toISOString(),
-                    });
-                    window.location.reload();
-                  } catch (error) {
-                    console.error('Error creating user:', error);
-                  }
-                }}
-              >
-                创建用户
-              </Button>
-            </div>
-          </SheetContent>
-        </Sheet>
+            </SheetContent>
+          </Sheet>
+        </div>
+        <div className="sticky top-[68px] bg-background z-10">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    )
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+          </Table>
+        </div>
       </div>
       <div className="rounded-md border">
         <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
