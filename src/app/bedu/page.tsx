@@ -459,18 +459,36 @@ export default function BeduPage() {
         <Table>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              table.getRowModel().rows.map((row) => {
+                const expTime = new Date(row.original.exp_time);
+                const now = new Date();
+                const timeDiff = expTime.getTime() - now.getTime();
+                const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+                
+                let bgColor = '';
+                if (timeDiff < 0) {
+                  bgColor = 'bg-red-100'; // Expired
+                } else if (daysDiff <= 3) {
+                  bgColor = 'bg-orange-100'; // 3 days to expire
+                } else if (daysDiff <= 7) {
+                  bgColor = 'bg-yellow-100'; // 7 days to expire
+                } else {
+                  bgColor = 'bg-green-100'; // Not expired
+                }
+
+                return (
+                  <TableRow key={row.id} className={bgColor}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                )
+              })
             ) : (
               <TableRow>
                 <TableCell
