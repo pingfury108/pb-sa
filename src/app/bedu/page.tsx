@@ -297,14 +297,18 @@ export default function BeduPage() {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [perPage] = useState(50)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
 
   useEffect(() => {
     async function fetchUsers() {
       try {
-        const records = await pb.collection('baidu_edu_users').getFullList({
-          sort: '-created' // 按创建时间倒序
+        const result = await pb.collection('baidu_edu_users').getList(currentPage, perPage, {
+          sort: '-exp_time',
         });
-        const mappedUsers = records.map(record => ({
+        const mappedUsers = result.items.map(record => ({
           id: record.id,
           name: record.name,
           remark: record.remark,
@@ -313,6 +317,8 @@ export default function BeduPage() {
           exp_time: record.exp_time
         }))
         setUsers(mappedUsers)
+        setTotalPages(result.totalPages)
+        setTotalItems(result.totalItems)
       } catch (error) {
         console.error('Error fetching users:', error)
       } finally {
@@ -321,7 +327,7 @@ export default function BeduPage() {
     }
 
     fetchUsers()
-  }, [])
+  }, [currentPage])
 
   const table = useReactTable({
     data: users,
@@ -501,6 +507,25 @@ export default function BeduPage() {
             )}
           </TableBody>
         </Table>
+      </div>
+      <div className="flex justify-center gap-2 my-4">
+        <Button
+          variant="outline"
+          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+          disabled={currentPage === 1}
+        >
+          上一页
+        </Button>
+        <span className="flex items-center px-4">
+          第 {currentPage} 页 / 共 {totalPages} 页 (总计 {totalItems} 条)
+        </span>
+        <Button
+          variant="outline"
+          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+          disabled={currentPage === totalPages}
+        >
+          下一页
+        </Button>
       </div>
     </div>
   )
