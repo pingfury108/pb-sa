@@ -9,19 +9,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { pb } from "@/lib/pocketbase"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
+  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+import { Checkbox } from "@/components/ui/checkbox"
+import { pb } from "@/lib/pocketbase"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { ArrowUpDown, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -43,6 +46,25 @@ interface User {
 }
 
 const columns: ColumnDef<User>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     accessorKey: "id",
     header: ({ column }) => {
@@ -301,6 +323,7 @@ export default function BeduPage() {
   const [perPage] = useState(50)
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
+  const [selection, setSelection] = useState({})
 
   useEffect(() => {
     async function fetchUsers() {
@@ -372,9 +395,17 @@ export default function BeduPage() {
       sorting,
       columnFilters,
       globalFilter,
+      selection,
     },
     onGlobalFilterChange: setGlobalFilter,
+    onSelectionChange: setSelection,
+    enableRowSelection: true,
   })
+
+  const copySelectedIds = () => {
+    const selectedIds = Object.keys(selection);
+    navigator.clipboard.writeText(selectedIds.join(','));
+  };
 
   if (loading) {
     return <div className="p-4">Loading...</div>
@@ -400,6 +431,14 @@ export default function BeduPage() {
               </div>
             )}
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={copySelectedIds}
+            disabled={Object.keys(selection).length === 0}
+          >
+            复制所选ID ({Object.keys(selection).length})
+          </Button>
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="sm">添加用户</Button>
