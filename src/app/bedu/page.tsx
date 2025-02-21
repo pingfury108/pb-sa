@@ -369,12 +369,22 @@ export default function BeduPage() {
     <div className="container mx-auto">
       <div className="sticky top-0 bg-background z-10">
         <div className="flex items-center py-4 gap-4">
-          <Input
-            placeholder="搜索 ID/用户名/备注..."
-            value={globalFilter}
-            onChange={(event) => setGlobalFilter(event.target.value)}
-            className="max-w-sm"
-          />
+          <div className="flex flex-col gap-2 max-w-sm w-full">
+            <Input
+              placeholder="搜索 ID/用户名/备注..."
+              value={globalFilter}
+              onChange={(event) => {
+                setGlobalFilter(event.target.value);
+                setCurrentPage(1); // Reset to first page when searching
+              }}
+              className="w-full"
+            />
+            {globalFilter && (
+              <div className="text-sm text-muted-foreground">
+                找到 {table.getFilteredRowModel().rows.length} 条结果
+              </div>
+            )}
+          </div>
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="sm">添加用户</Button>
