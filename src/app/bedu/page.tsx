@@ -305,9 +305,21 @@ export default function BeduPage() {
   useEffect(() => {
     async function fetchUsers() {
       try {
-        const result = await pb.collection('baidu_edu_users').getList(currentPage, perPage, {
-          sort: '-exp_time',
-        });
+        let result;
+        
+        if (globalFilter) {
+          // When searching, fetch all matching results without pagination
+          result = await pb.collection('baidu_edu_users').getList(1, 1000, {
+            sort: '-exp_time',
+            filter: `name ~ "${globalFilter}" || id ~ "${globalFilter}" || remark ~ "${globalFilter}"`,
+          });
+        } else {
+          // Normal paginated fetch when not searching
+          result = await pb.collection('baidu_edu_users').getList(currentPage, perPage, {
+            sort: '-exp_time',
+          });
+        }
+        
         const mappedUsers = result.items.map(record => ({
           id: record.id,
           name: record.name,
@@ -315,19 +327,22 @@ export default function BeduPage() {
           created: record.created,
           updated: record.updated,
           exp_time: record.exp_time
-        }))
-        setUsers(mappedUsers)
-        setTotalPages(result.totalPages)
-        setTotalItems(result.totalItems)
+        }));
+        
+        setUsers(mappedUsers);
+        setTotalPages(result.totalPages);
+        setTotalItems(result.totalItems);
       } catch (error) {
-        console.error('Error fetching users:', error)
+        console.error('Error fetching users:', error);
       } finally {
-        setLoading(false)
+        if (!globalFilter) {
+          setLoading(false); // Only set loading to false during initial load
+        }
       }
     }
 
-    fetchUsers()
-  }, [currentPage])
+    fetchUsers();
+  }, [currentPage, globalFilter]);
 
   const table = useReactTable({
     data: users,
