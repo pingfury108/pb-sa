@@ -118,7 +118,7 @@ export default function BeduPage() {
 
   const copySelectedIds = () => {
     const selectedIds = table.getSelectedRowModel().rows.map(row => row.getValue('id'));
-    navigator.clipboard.writeText(selectedIds.join(','));
+    navigator.clipboard.writeText(selectedIds.join('\n'));
   };
 
   if (loading) {
@@ -129,7 +129,7 @@ export default function BeduPage() {
     <div className="container mx-auto">
       <div className="sticky top-0 bg-background z-10">
         <div className="flex items-center py-4 gap-4">
-          <div className="flex flex-col gap-2 max-w-sm w-full">
+          <div className="flex flex-col gap-2 w-full">
             <div className="flex items-center gap-4">
               <div className="flex-1 relative">
                 <Input
@@ -150,10 +150,55 @@ export default function BeduPage() {
               <Button
                 variant="outline"
                 size="sm"
+                className="h-9"
                 onClick={copySelectedIds}
                 disabled={Object.keys(rowSelection).length === 0}
               >
                 复制所选ID ({Object.keys(rowSelection).length})
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="h-9"
+                onClick={async () => {
+                  if (!confirm(`确定要删除选中的 ${Object.keys(rowSelection).length} 条记录吗？`)) {
+                    return;
+                  }
+                  setLoading(true);
+                  try {
+                    const selectedIds = table.getSelectedRowModel().rows.map(row => row.getValue('id'));
+                    await Promise.all(
+                      selectedIds.map(id =>
+                        pb.collection('baidu_edu_users').delete(id)
+                      )
+                    );
+                    setRowSelection({});
+                    // Refresh the list
+                    setCurrentPage(1);
+                    const result = await pb.collection('baidu_edu_users').getList(1, perPage, {
+                      sort: '-exp_time',
+                    });
+                    const mappedUsers = result.items.map(record => ({
+                      id: record.id,
+                      name: record.name,
+                      remark: record.remark,
+                      created: record.created,
+                      updated: record.updated,
+                      exp_time: record.exp_time
+                    }));
+                    setUsers(mappedUsers);
+                    setTotalPages(result.totalPages);
+                    setTotalItems(result.totalItems);
+                  } catch (error) {
+                    console.error('Failed to delete users:', error);
+                    alert('删除失败：' + error.message);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={Object.keys(rowSelection).length === 0}
+              >
+                删除所选 ({Object.keys(rowSelection).length})
               </Button>
             </div>
           </div>
