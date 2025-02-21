@@ -119,9 +119,6 @@ export default function BeduPage() {
     });
   };
 
-  if (loading) {
-    return <div className="p-4">Loading...</div>
-  }
 
   return (
     <div className="container mx-auto">
