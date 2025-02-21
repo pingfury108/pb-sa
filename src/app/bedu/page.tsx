@@ -112,7 +112,7 @@ export default function BeduPage() {
   })
 
   const copySelectedIds = () => {
-    const selectedIds = table.getSelectedRowModel().rows.map(row => row.getValue('id'));
+    const selectedIds = table.getSelectedRowModel().rows.map(row => row.getValue('id') as string);
     navigator.clipboard.writeText(selectedIds.join('\n'));
     toast({
       description: `已复制 ${selectedIds.length} 个ID到剪贴板`,
@@ -164,7 +164,7 @@ export default function BeduPage() {
                   }
                   setLoading(true);
                   try {
-                    const selectedIds = table.getSelectedRowModel().rows.map(row => row.getValue('id'));
+                    const selectedIds = table.getSelectedRowModel().rows.map(row => row.getValue('id') as string);
                     await Promise.all(
                       selectedIds.map(id =>
                         pb.collection('baidu_edu_users').delete(id)
@@ -187,9 +187,9 @@ export default function BeduPage() {
                     setUsers(mappedUsers);
                     setTotalPages(result.totalPages);
                     setTotalItems(result.totalItems);
-                  } catch (error) {
+                  } catch (error: unknown) {
                     console.error('Failed to delete users:', error);
-                    alert('删除失败：' + error.message);
+                    alert('删除失败：' + (error instanceof Error ? error.message : String(error)));
                   } finally {
                     setLoading(false);
                   }

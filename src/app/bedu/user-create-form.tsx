@@ -11,7 +11,11 @@ import {
 } from "@/components/ui/sheet"
 import { pb } from "@/lib/pocketbase"
 
-export function UserCreateForm() {
+interface UserCreateFormProps {
+  onSuccess?: () => Promise<void>;
+}
+
+export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -64,6 +68,7 @@ export function UserCreateForm() {
                   remark: remarkInput.value,
                   exp_time: expTime.toISOString(),
                 });
+                if (onSuccess) await onSuccess();
                 window.location.reload();
               } catch (error) {
                 console.error('Error creating user:', error);
