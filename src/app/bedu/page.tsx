@@ -33,7 +33,6 @@ import { columns } from "./columns"
 
 export default function BeduPage() {
   const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
@@ -75,15 +74,11 @@ export default function BeduPage() {
         setTotalItems(result.totalItems);
       } catch (error) {
         console.error('Error fetching users:', error);
-      } finally {
-        if (!globalFilter) {
-          setLoading(false); // Only set loading to false during initial load
-        }
       }
     }
 
     fetchUsers();
-  }, [currentPage, globalFilter]);
+  }, [currentPage, globalFilter, perPage]);
 
   const table = useReactTable({
     data: users,
@@ -159,7 +154,6 @@ export default function BeduPage() {
                   if (!confirm(`确定要删除选中的 ${Object.keys(rowSelection).length} 条记录吗？`)) {
                     return;
                   }
-                  setLoading(true);
                   try {
                     const selectedIds = table.getSelectedRowModel().rows.map(row => row.getValue('id') as string);
                     await Promise.all(
@@ -187,8 +181,6 @@ export default function BeduPage() {
                   } catch (error: unknown) {
                     console.error('Failed to delete users:', error);
                     alert('删除失败：' + (error instanceof Error ? error.message : String(error)));
-                  } finally {
-                    setLoading(false);
                   }
                 }}
                 disabled={Object.keys(rowSelection).length === 0}
@@ -200,7 +192,6 @@ export default function BeduPage() {
           <Sheet>
               <UserCreateForm onSuccess={async () => {
                 setCurrentPage(1);
-                setLoading(true);
                 try {
                   const result = await pb.collection('baidu_edu_users').getList(1, perPage, {
                     sort: '-exp_time',
@@ -216,10 +207,15 @@ export default function BeduPage() {
                   setUsers(mappedUsers);
                   setTotalPages(result.totalPages);
                   setTotalItems(result.totalItems);
-                } finally {
-                  setLoading(false);
+                } catch (error: unknown) {
+                  console.error('Failed to fetch users:', error);
+                  toast({
+                    title: "Error",
+                    description: "Failed to refresh user list: " + (error instanceof Error ? error.message : String(error)),
+                    variant: "destructive",
+                  });
                 }
-              }} />
+               }} />
           </Sheet>
         </div>
         <div className="sticky top-[68px] bg-background z-10">
