@@ -10,10 +10,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import {
-  ColumnDef,
   ColumnFiltersState,
   SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -21,11 +19,9 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { Checkbox } from "@/components/ui/checkbox"
 import { pb } from "@/lib/pocketbase"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowUpDown, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -36,282 +32,9 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 
-interface User {
-  id: string
-  name: string
-  remark: string
-  created: string
-  updated: string
-  exp_time: string
-}
-
-const columns: ColumnDef<User>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "id",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          ID
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const id = row.getValue("id") as string
-      return (
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 p-0"
-            onClick={() => {
-              navigator.clipboard.writeText(id)
-            }}
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
-          <span>{id}</span>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          用户名
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-  },
-  {
-    accessorKey: "exp_time",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          过期时间
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      return new Date(row.getValue("exp_time")).toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      }).replace(/\//g, '-')
-    },
-  },
-  {
-    accessorKey: "remark",
-    header: "备注",
-  },
-  {
-    accessorKey: "created",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          创建时间
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      return new Date(row.getValue("created")).toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      }).replace(/\//g, '-')
-    },
-  },
-  {
-    accessorKey: "updated",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          更新时间
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      return new Date(row.getValue("updated")).toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      }).replace(/\//g, '-')
-    },
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const user = row.original
-      return (
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm">
-              续费
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>续费用户</SheetTitle>
-              <SheetDescription>
-                修改用户 {user.name} 的信息
-              </SheetDescription>
-            </SheetHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">用户名</Label>
-                <Input
-                  id="name"
-                  defaultValue={user.name}
-                  className="w-full"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="remark">备注</Label>
-                <Input
-                  id="remark"
-                  defaultValue={user.remark}
-                  className="w-full"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="days">续费天数</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="days"
-                    type="number"
-                    min="1"
-                    defaultValue="1"
-                    className="w-20"
-                    onChange={(e) => {
-                      const days = parseInt(e.target.value);
-                      const expDate = document.getElementById('exp-date');
-                      if (expDate && !isNaN(days)) {
-                        const currentTime = new Date();
-                        const userExpTime = new Date(user.exp_time);
-                        const newExpTime = new Date(
-                          userExpTime > currentTime
-                            ? userExpTime.getTime() + days * 24 * 60 * 60 * 1000
-                            : currentTime.getTime() + days * 24 * 60 * 60 * 1000
-                        );
-                        expDate.textContent = newExpTime.toLocaleString('zh-CN', {
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit',
-                          hour12: false
-                        }).replace(/\//g, '-');
-                      }
-                    }}
-                  />
-                  <span>天</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>到期时间</Label>
-                <div id="exp-date" className="text-sm">
-                  {new Date(user.exp_time).toLocaleString('zh-CN', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false
-                  }).replace(/\//g, '-')}
-                </div>
-              </div>
-              <Button
-                onClick={async () => {
-                  const nameInput = document.getElementById('name') as HTMLInputElement;
-                  const remarkInput = document.getElementById('remark') as HTMLInputElement;
-                  const daysInput = document.getElementById('days') as HTMLInputElement;
-                  const days = parseInt(daysInput.value);
-                  
-                  if (isNaN(days) || days < 1) return;
-                  
-                  const currentTime = new Date();
-                  const userExpTime = new Date(user.exp_time);
-                  const expTime = new Date(
-                    userExpTime > currentTime
-                      ? userExpTime.getTime() + days * 24 * 60 * 60 * 1000
-                      : currentTime.getTime() + days * 24 * 60 * 60 * 1000
-                  );
-                  
-                  try {
-                    await pb.collection('baidu_edu_users').update(user.id, {
-                      name: nameInput.value,
-                      remark: remarkInput.value,
-                      exp_time: expTime.toISOString(),
-                    });
-                    window.location.reload();
-                  } catch (error) {
-                    console.error('Error updating user:', error);
-                  }
-                }}
-              >
-                续费
-              </Button>
-            </div>
-          </SheetContent>
-        </Sheet>
-      )
-    },
-  },
-]
+import { UserCreateForm } from "./user-create-form"
+import type { User } from "./types"
+import { columns } from "./columns"
 
 export default function BeduPage() {
   const [users, setUsers] = useState<User[]>([])
@@ -323,7 +46,7 @@ export default function BeduPage() {
   const [perPage] = useState(50)
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
-  const [selection, setSelection] = useState({})
+  const [rowSelection, setRowSelection] = useState({})
 
   useEffect(() => {
     async function fetchUsers() {
@@ -370,40 +93,31 @@ export default function BeduPage() {
   const table = useReactTable({
     data: users,
     columns,
-    getCoreRowModel: getCoreRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
-    getFilteredRowModel: getFilteredRowModel(),
-    filterFns: {
-      customGlobalFilter: (row, columnId, filterValue) => {
-        const value = String(row.getValue(columnId)).toLowerCase()
-        return value.includes(filterValue.toLowerCase())
-      },
-    },
-    globalFilterFn: (row) => {
-      const searchValue = globalFilter.toLowerCase()
-      const id = String(row.getValue("id")).toLowerCase()
-      const name = String(row.getValue("name")).toLowerCase()
-      const remark = String(row.getValue("remark")).toLowerCase()
-      
-      return id.includes(searchValue) || 
-             name.includes(searchValue) || 
-             remark.includes(searchValue)
-    },
     state: {
       sorting,
       columnFilters,
       globalFilter,
-      selection,
+      rowSelection,
     },
-    onGlobalFilterChange: setGlobalFilter,
-    onSelectionChange: setSelection,
     enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: (row) => {
+      const searchValue = globalFilter.toLowerCase()
+      return ['id', 'name', 'remark'].some(key => 
+        String(row.getValue(key)).toLowerCase().includes(searchValue)
+      )
+    },
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   })
 
   const copySelectedIds = () => {
-    const selectedIds = Object.keys(selection);
+    const selectedIds = table.getSelectedRowModel().rows.map(row => row.getValue('id'));
     navigator.clipboard.writeText(selectedIds.join(','));
   };
 
@@ -416,90 +130,56 @@ export default function BeduPage() {
       <div className="sticky top-0 bg-background z-10">
         <div className="flex items-center py-4 gap-4">
           <div className="flex flex-col gap-2 max-w-sm w-full">
-            <Input
-              placeholder="搜索 ID/用户名/备注..."
-              value={globalFilter}
-              onChange={(event) => {
-                setGlobalFilter(event.target.value);
-                setCurrentPage(1); // Reset to first page when searching
-              }}
-              className="w-full"
-            />
-            {globalFilter && (
-              <div className="text-sm text-muted-foreground">
-                找到 {table.getFilteredRowModel().rows.length} 条结果
-              </div>
-            )}
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={copySelectedIds}
-            disabled={Object.keys(selection).length === 0}
-          >
-            复制所选ID ({Object.keys(selection).length})
-          </Button>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="sm">添加用户</Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>添加新用户</SheetTitle>
-                <SheetDescription>
-                  创建新的百度教育用户
-                </SheetDescription>
-              </SheetHeader>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">用户名</Label>
-                  <Input id="name" className="w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="remark">备注</Label>
-                  <Input id="remark" className="w-full" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="exp_time">过期时间</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="days"
-                      type="number"
-                      min="1"
-                      defaultValue="1"
-                      className="w-20"
-                    />
-                    <span>天</span>
-                  </div>
-                </div>
-                <Button
-                  onClick={async () => {
-                    const nameInput = document.getElementById('name') as HTMLInputElement;
-                    const remarkInput = document.getElementById('remark') as HTMLInputElement;
-                    const daysInput = document.getElementById('days') as HTMLInputElement;
-                    const days = parseInt(daysInput.value);
-                    
-                    if (isNaN(days) || days < 1) return;
-                    
-                    const expTime = new Date();
-                    expTime.setDate(expTime.getDate() + days);
-                    
-                    try {
-                      await pb.collection('baidu_edu_users').create({
-                        name: nameInput.value,
-                        remark: remarkInput.value,
-                        exp_time: expTime.toISOString(),
-                      });
-                      window.location.reload();
-                    } catch (error) {
-                      console.error('Error creating user:', error);
-                    }
+            <div className="flex items-center gap-4">
+              <div className="flex-1 relative">
+                <Input
+                  placeholder="搜索 ID/用户名/备注..."
+                  value={globalFilter}
+                  onChange={(event) => {
+                    setGlobalFilter(event.target.value);
+                    setCurrentPage(1); // Reset to first page when searching
                   }}
-                >
-                  创建用户
-                </Button>
+                  className="w-full"
+                />
+                {globalFilter && (
+                  <div className="absolute top-full left-0 mt-1 text-sm text-muted-foreground z-50 bg-background">
+                    找到 {table.getFilteredRowModel().rows.length} 条结果
+                  </div>
+                )}
               </div>
-            </SheetContent>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={copySelectedIds}
+                disabled={Object.keys(rowSelection).length === 0}
+              >
+                复制所选ID ({Object.keys(rowSelection).length})
+              </Button>
+            </div>
+          </div>
+          <Sheet>
+              <UserCreateForm onSuccess={async () => {
+                setCurrentPage(1);
+                setLoading(true);
+                try {
+                  const result = await pb.collection('baidu_edu_users').getList(1, perPage, {
+                    sort: '-exp_time',
+                  });
+                  const mappedUsers = result.items.map(record => ({
+                    id: record.id,
+                    name: record.name,
+                    remark: record.remark,
+                    created: record.created,
+                    updated: record.updated,
+                    exp_time: record.exp_time
+                  }));
+                  setUsers(mappedUsers);
+                  setTotalPages(result.totalPages);
+                  setTotalItems(result.totalItems);
+                } finally {
+                  setLoading(false);
+                }
+              }} />
           </Sheet>
         </div>
         <div className="sticky top-[68px] bg-background z-10">
@@ -535,16 +215,10 @@ export default function BeduPage() {
                 const timeDiff = expTime.getTime() - now.getTime();
                 const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
                 
-                let bgColor = '';
-                if (timeDiff < 0) {
-                  bgColor = 'bg-red-100'; // Expired
-                } else if (daysDiff <= 3) {
-                  bgColor = 'bg-orange-100'; // 3 days to expire
-                } else if (daysDiff <= 7) {
-                  bgColor = 'bg-yellow-100'; // 7 days to expire
-                } else {
-                  bgColor = 'bg-green-100'; // Not expired
-                }
+                const bgColor = timeDiff < 0 ? 'bg-red-50 hover:bg-red-100' : 
+                               daysDiff <= 3 ? 'bg-orange-50 hover:bg-orange-100' :
+                               daysDiff <= 7 ? 'bg-yellow-50 hover:bg-yellow-100' :
+                               'bg-green-50 hover:bg-green-100';
 
                 return (
                   <TableRow key={row.id} className={bgColor}>
