@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Geist, Geist_Mono } from "next/font/google";
 import { MainNav } from "@/components/nav";
+import { Toaster } from "@/components/ui/toaster";
 import { usePathname } from 'next/navigation';
 import { AuthProvider } from "@/components/AuthProvider";
 import "./globals.css";
@@ -30,6 +31,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
         <AuthProvider>
+          <Toaster />
           <div className="relative flex min-h-screen flex-col">
             <div className={`flex-1 items-start ${isLoginPage ? '' : 'md:grid md:grid-cols-[220px_1fr]'}`}>
               {!isLoginPage && (

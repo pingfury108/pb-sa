@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { toast } from "@/hooks/use-toast"
 import {
   Table,
   TableBody,
@@ -21,15 +22,9 @@ import {
 } from "@tanstack/react-table"
 import { pb } from "@/lib/pocketbase"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet"
 
 import { UserCreateForm } from "./user-create-form"
@@ -119,6 +114,9 @@ export default function BeduPage() {
   const copySelectedIds = () => {
     const selectedIds = table.getSelectedRowModel().rows.map(row => row.getValue('id'));
     navigator.clipboard.writeText(selectedIds.join('\n'));
+    toast({
+      description: `已复制 ${selectedIds.length} 个ID到剪贴板`,
+    });
   };
 
   if (loading) {
