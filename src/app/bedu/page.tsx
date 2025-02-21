@@ -21,7 +21,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { pb } from "@/lib/pocketbase"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -30,6 +29,8 @@ import {
 import { UserCreateForm } from "./user-create-form"
 import type { User } from "./types"
 import { columns } from "./columns"
+import { SearchInput } from "./components/search-input"
+import { ActionButtons } from "./components/action-buttons"
 
 export default function BeduPage() {
   const [users, setUsers] = useState<User[]>([])
@@ -106,13 +107,6 @@ export default function BeduPage() {
     getPaginationRowModel: getPaginationRowModel(),
   })
 
-  const copySelectedIds = () => {
-    const selectedIds = table.getSelectedRowModel().rows.map(row => row.getValue('id') as string);
-    navigator.clipboard.writeText(selectedIds.join('\n'));
-    toast({
-      description: `已复制 ${selectedIds.length} 个ID到剪贴板`,
-    });
-  };
 
 
   return (
@@ -120,103 +114,83 @@ export default function BeduPage() {
       <div className="sticky top-0 bg-background z-10">
         <div className="flex items-center py-4 gap-4">
           <div className="flex flex-col gap-2 w-full">
-            <div className="flex items-center gap-4">
-              <div className="flex-1 relative">
-                <Input
-                  placeholder="搜索 ID/用户名/备注..."
+            <div className="flex flex-col md:flex-row gap-4 items-start">
+              <div className="w-full md:w-1/2">
+                <SearchInput
                   value={globalFilter}
-                  onChange={(event) => {
-                    setGlobalFilter(event.target.value);
+                  onChange={(value) => {
+                    setGlobalFilter(value);
                     setCurrentPage(1); // Reset to first page when searching
                   }}
-                  className="w-full"
+                  totalResults={table.getFilteredRowModel().rows.length}
                 />
-                {globalFilter && (
-                  <div className="absolute top-full left-0 mt-1 text-sm text-muted-foreground z-50 bg-background">
-                    找到 {table.getFilteredRowModel().rows.length} 条结果
-                  </div>
-                )}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9"
-                onClick={copySelectedIds}
-                disabled={Object.keys(rowSelection).length === 0}
-              >
-                复制所选ID ({Object.keys(rowSelection).length})
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                className="h-9"
-                onClick={async () => {
-                  if (!confirm(`确定要删除选中的 ${Object.keys(rowSelection).length} 条记录吗？`)) {
-                    return;
-                  }
-                  try {
-                    const selectedIds = table.getSelectedRowModel().rows.map(row => row.getValue('id') as string);
-                    await Promise.all(
-                      selectedIds.map(id =>
-                        pb.collection('baidu_edu_users').delete(id)
-                      )
-                    );
-                    setRowSelection({});
-                    // Refresh the list
+              <div className="w-full md:w-1/2 flex justify-end items-center flex-nowrap gap-2">
+                <Sheet>
+                  <UserCreateForm onSuccess={async () => {
                     setCurrentPage(1);
-                    const result = await pb.collection('baidu_edu_users').getList(1, perPage, {
-                      sort: '-exp_time',
-                    });
-                    const mappedUsers = result.items.map(record => ({
-                      id: record.id,
-                      name: record.name,
-                      remark: record.remark,
-                      created: record.created,
-                      updated: record.updated,
-                      exp_time: record.exp_time
-                    }));
-                    setUsers(mappedUsers);
-                    setTotalPages(result.totalPages);
-                    setTotalItems(result.totalItems);
-                  } catch (error: unknown) {
-                    console.error('Failed to delete users:', error);
-                    alert('删除失败：' + (error instanceof Error ? error.message : String(error)));
-                  }
-                }}
-                disabled={Object.keys(rowSelection).length === 0}
-              >
-                删除所选 ({Object.keys(rowSelection).length})
-              </Button>
+                    try {
+                      const result = await pb.collection('baidu_edu_users').getList(1, perPage, {
+                        sort: '-exp_time',
+                      });
+                      const mappedUsers = result.items.map(record => ({
+                        id: record.id,
+                        name: record.name,
+                        remark: record.remark,
+                        created: record.created,
+                        updated: record.updated,
+                        exp_time: record.exp_time
+                      }));
+                      setUsers(mappedUsers);
+                      setTotalPages(result.totalPages);
+                      setTotalItems(result.totalItems);
+                    } catch (error: unknown) {
+                      console.error('Failed to fetch users:', error);
+                      toast({
+                        title: "Error",
+                        description: "Failed to refresh user list: " + (error instanceof Error ? error.message : String(error)),
+                        variant: "destructive",
+                      });
+                    }
+                  }} />
+                </Sheet>
+                <ActionButtons
+                  table={table}
+                  rowSelection={rowSelection}
+                  onDelete={async () => {
+                    try {
+                      const selectedIds = table.getSelectedRowModel().rows.map(row => row.getValue('id') as string);
+                      await Promise.all(
+                        selectedIds.map(id =>
+                          pb.collection('baidu_edu_users').delete(id)
+                        )
+                      );
+                      setRowSelection({});
+                      // Refresh the list
+                      setCurrentPage(1);
+                      const result = await pb.collection('baidu_edu_users').getList(1, perPage, {
+                        sort: '-exp_time',
+                      });
+                      const mappedUsers = result.items.map(record => ({
+                        id: record.id,
+                        name: record.name,
+                        remark: record.remark,
+                        created: record.created,
+                        updated: record.updated,
+                        exp_time: record.exp_time
+                      }));
+                      setUsers(mappedUsers);
+                      setTotalPages(result.totalPages);
+                      setTotalItems(result.totalItems);
+                    } catch (error: unknown) {
+                      console.error('Failed to delete users:', error);
+                      alert('删除失败：' + (error instanceof Error ? error.message : String(error)));
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
-          <Sheet>
-              <UserCreateForm onSuccess={async () => {
-                setCurrentPage(1);
-                try {
-                  const result = await pb.collection('baidu_edu_users').getList(1, perPage, {
-                    sort: '-exp_time',
-                  });
-                  const mappedUsers = result.items.map(record => ({
-                    id: record.id,
-                    name: record.name,
-                    remark: record.remark,
-                    created: record.created,
-                    updated: record.updated,
-                    exp_time: record.exp_time
-                  }));
-                  setUsers(mappedUsers);
-                  setTotalPages(result.totalPages);
-                  setTotalItems(result.totalItems);
-                } catch (error: unknown) {
-                  console.error('Failed to fetch users:', error);
-                  toast({
-                    title: "Error",
-                    description: "Failed to refresh user list: " + (error instanceof Error ? error.message : String(error)),
-                    variant: "destructive",
-                  });
-                }
-               }} />
-          </Sheet>
         </div>
         <div className="sticky top-[68px] bg-background z-10">
           <Table>
