@@ -46,20 +46,14 @@ export default function BeduPage() {
   useEffect(() => {
     async function fetchUsers() {
       try {
-        let result;
         
-        if (globalFilter) {
-          // When searching, fetch all matching results without pagination
-          result = await pb.collection('baidu_edu_users').getList(1, 1000, {
-            sort: '-exp_time',
-            filter: `name ~ "${globalFilter}" || id ~ "${globalFilter}" || remark ~ "${globalFilter}"`,
-          });
-        } else {
-          // Normal paginated fetch when not searching
-          result = await pb.collection('baidu_edu_users').getList(currentPage, perPage, {
-            sort: '-exp_time',
-          });
-        }
+        // Always use pagination with perPage items
+        const result = await pb.collection('baidu_edu_users').getList(currentPage, perPage, {
+          sort: '-exp_time',
+          ...(globalFilter ? {
+            filter: `name ~ "${globalFilter}" || id ~ "${globalFilter}" || remark ~ "${globalFilter}"`
+          } : {})
+        });
         
         const mappedUsers = result.items.map(record => ({
           id: record.id,
@@ -105,6 +99,11 @@ export default function BeduPage() {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 50, // 设置与后端一致的页面大小
+      },
+    },
   })
 
 
