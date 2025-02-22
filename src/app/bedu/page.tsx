@@ -224,10 +224,10 @@ export default function BeduPage() {
                 const timeDiff = expTime.getTime() - now.getTime();
                 const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
                 
-                const bgColor = timeDiff < 0 ? 'bg-red-50 hover:bg-red-100' : 
-                               daysDiff <= 3 ? 'bg-orange-50 hover:bg-orange-100' :
-                               daysDiff <= 7 ? 'bg-yellow-50 hover:bg-yellow-100' :
-                               'bg-green-50 hover:bg-green-100';
+                const bgColor = timeDiff < 0 ? 'bg-red-200 hover:bg-red-300' : 
+                               daysDiff <= 3 ? 'bg-orange-100 hover:bg-orange-200' :
+                               daysDiff <= 7 ? 'bg-yellow-100 hover:bg-yellow-200' :
+                               'bg-green-100 hover:bg-green-200';
 
                 return (
                   <TableRow key={row.id} className={bgColor}>
