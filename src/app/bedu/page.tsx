@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button"
 import {
   Sheet,
 } from "@/components/ui/sheet"
+import { Skeleton } from "@/components/ui/skeleton"
 
 import { UserCreateForm } from "./user-create-form"
 import type { User } from "./types"
@@ -42,11 +43,12 @@ export default function BeduPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalItems, setTotalItems] = useState(0)
   const [rowSelection, setRowSelection] = useState({})
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     async function fetchUsers() {
       try {
-        
+        setIsLoading(true)
         // Always use pagination with perPage items
         const result = await pb.collection('baidu_edu_users').getList(currentPage, perPage, {
           sort: '-exp_time',
@@ -67,8 +69,10 @@ export default function BeduPage() {
         setUsers(mappedUsers);
         setTotalPages(result.totalPages);
         setTotalItems(result.totalItems);
+        setIsLoading(false)
       } catch (error) {
         console.error('Error fetching users:', error);
+        setIsLoading(false)
       }
     }
 
@@ -217,7 +221,13 @@ export default function BeduPage() {
       <div className="rounded-md border">
         <Table>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={columns.length}>
+                  <Skeleton className="h-4 w-full" />
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => {
                 const expTime = new Date(row.original.exp_time);
                 const now = new Date();
