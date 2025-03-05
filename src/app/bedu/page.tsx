@@ -153,14 +153,16 @@ export default function BeduPage() {
                     setGlobalFilter(value);
                     setCurrentPage(1); // Reset to first page when searching
 
-                    // Update URL with search query
+                    // Update URL with search query without page reload
                     const params = new URLSearchParams(searchParams.toString());
                     if (value) {
                       params.set("q", value);
                     } else {
                       params.delete("q");
                     }
-                    router.push(`?${params.toString()}`);
+
+                    const newUrl = `?${params.toString()}`;
+                    window.history.pushState({}, '', newUrl);
                   }}
                   totalResults={table.getFilteredRowModel().rows.length}
                 />
@@ -227,7 +229,7 @@ export default function BeduPage() {
           </div>
         </div>
       </div>
-      <div className="sticky top-[calc(var(--header-height,4rem))] mt-1 bg-background z-10 mb-1">
+      <div className="sticky top-[calc(var(--header-height,4rem))] mt-1 mb-1 bg-background z-10">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -308,10 +310,11 @@ export default function BeduPage() {
             const newPage = Math.max(1, currentPage - 1);
             setCurrentPage(newPage);
 
-            // Update URL with page number
+            // Update URL with page number without reload
             const params = new URLSearchParams(searchParams.toString());
             params.set("page", newPage.toString());
-            router.push(`?${params.toString()}`);
+            const newUrl = `?${params.toString()}`;
+            window.history.pushState({}, '', newUrl);
           }}
           disabled={currentPage === 1}
         >
@@ -327,10 +330,11 @@ export default function BeduPage() {
             const newPage = Math.min(totalPages, currentPage + 1);
             setCurrentPage(newPage);
 
-            // Update URL with page number
+            // Update URL with page number without reload
             const params = new URLSearchParams(searchParams.toString());
             params.set("page", newPage.toString());
-            router.push(`?${params.toString()}`);
+            const newUrl = `?${params.toString()}`;
+            window.history.pushState({}, '', newUrl);
           }}
           disabled={currentPage === totalPages}
         >

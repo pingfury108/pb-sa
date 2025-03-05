@@ -11,12 +11,14 @@ import {
 } from "@/components/ui/sheet"
 import { pb } from "@/lib/pocketbase"
 import type { User } from "./types"
+import { useRouter } from "next/navigation"
 
 interface UserRenewFormProps {
   user: User
 }
 
 export function UserRenewForm({ user }: UserRenewFormProps) {
+  const router = useRouter();
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -120,7 +122,10 @@ export function UserRenewForm({ user }: UserRenewFormProps) {
                   remark: remarkInput.value,
                   exp_time: expTime.toISOString(),
                 });
-                window.location.reload();
+                // Set URL query param to the updated user's name and reload
+                const params = new URLSearchParams();
+                params.set("q", nameInput.value);
+                window.location.href = `?${params.toString()}`;
               } catch (error) {
                 console.error('Error updating user:', error);
               }

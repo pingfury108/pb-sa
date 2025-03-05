@@ -11,12 +11,14 @@ import {
 } from "@/components/ui/sheet"
 import { pb } from "@/lib/pocketbase"
 import { toast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
 
 interface BatchUserCreateFormProps {
   onSuccess?: () => Promise<void>;
 }
 
 export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
+  const router = useRouter();
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -134,11 +136,17 @@ export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
                   description: `成功创建 ${count} 个用户`,
                 });
                 
+                // Set URL query param to the prefix and reload
+                const params = new URLSearchParams();
+                params.set("q", prefix);
+                
+                // First call onSuccess to ensure data is properly updated
                 if (onSuccess) {
                   await onSuccess();
-                } else {
-                  window.location.reload();
                 }
+                
+                // Force reload with the new query parameter to show the newly created users
+                window.location.href = `?${params.toString()}`;
               } catch (error) {
                 console.error('Error creating batch users:', error);
                 toast({
