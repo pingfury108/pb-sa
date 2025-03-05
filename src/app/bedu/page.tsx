@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams} from "next/navigation";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -52,8 +52,7 @@ export default function BeduPage() {
   const [rowSelection, setRowSelection] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-
-  const fetchAndUpdateUsers = async (page = currentPage, search = globalFilter) => {
+  const fetchAndUpdateUsers = useCallback(async (page = currentPage, search = globalFilter) => {
     try {
       setIsLoading(true);
       const result = await pb
@@ -89,11 +88,11 @@ export default function BeduPage() {
       });
       setIsLoading(false);
     }
-  };
+  }, [currentPage, globalFilter, perPage]);
 
   useEffect(() => {
     fetchAndUpdateUsers(currentPage, globalFilter);
-  }, [currentPage, globalFilter, perPage]);
+  }, [fetchAndUpdateUsers, currentPage, globalFilter,]);
 
   useEffect(() => {
     // Update header height on window resize
