@@ -28,6 +28,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 
 import { UserCreateForm } from "./user-create-form"
+import { BatchUserCreateForm } from "./batch-user-create-form"
 import type { User } from "./types"
 import { columns } from "./columns"
 import { SearchInput } from "./components/search-input"
@@ -129,8 +130,7 @@ export default function BeduPage() {
                 />
               </div>
               <div className="w-full md:w-1/2 flex justify-end items-center flex-nowrap gap-2">
-                <Sheet>
-                  <UserCreateForm onSuccess={async () => {
+                <UserCreateForm onSuccess={async () => {
                     setCurrentPage(1);
                     try {
                       const result = await pb.collection('baidu_edu_users').getList(1, perPage, {
@@ -156,7 +156,32 @@ export default function BeduPage() {
                       });
                     }
                   }} />
-                </Sheet>
+                <BatchUserCreateForm onSuccess={async () => {
+                    setCurrentPage(1);
+                    try {
+                      const result = await pb.collection('baidu_edu_users').getList(1, perPage, {
+                        sort: '-exp_time',
+                      });
+                      const mappedUsers = result.items.map(record => ({
+                        id: record.id,
+                        name: record.name,
+                        remark: record.remark,
+                        created: record.created,
+                        updated: record.updated,
+                        exp_time: record.exp_time
+                      }));
+                      setUsers(mappedUsers);
+                      setTotalPages(result.totalPages);
+                      setTotalItems(result.totalItems);
+                    } catch (error: unknown) {
+                      console.error('Failed to fetch users:', error);
+                      toast({
+                        title: "Error",
+                        description: "Failed to refresh user list: " + (error instanceof Error ? error.message : String(error)),
+                        variant: "destructive",
+                      });
+                    }
+                  }} />
                 <ActionButtons
                   table={table}
                   rowSelection={rowSelection}
