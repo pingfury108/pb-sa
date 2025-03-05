@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams} from "next/navigation";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -31,7 +31,7 @@ import type { User } from "./types";
 import { columns } from "./columns";
 import { SearchInput } from "./components/search-input";
 
-export default function BeduPage() {
+function BeduContent() {
   const searchParams = useSearchParams();
   useEffect(() => {
     // Calculate and set header height for sticky positioning
@@ -137,11 +137,11 @@ export default function BeduPage() {
         pageSize: 50, // Set page size to match the backend
       },
     },
-    });
+  });
 
   return (
-  <div className="container mx-auto">
-    <div className="sticky top-0 bg-background z-10 pb-2">
+    <div className="container mx-auto">
+      <div className="sticky top-0 bg-background z-10 pb-2">
         <div className="flex items-center pt-4 gap-4">
           <div className="flex flex-col gap-2 w-full">
             <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-start">
@@ -239,9 +239,9 @@ export default function BeduPage() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                     </TableHead>
                   );
                 })}
@@ -267,13 +267,13 @@ export default function BeduPage() {
                 const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
                 const bgColor =
-                  timeDiff < 0
-                    ? "bg-red-200 hover:bg-red-300"
-                    : daysDiff <= 3
-                      ? "bg-orange-100 hover:bg-orange-200"
-                      : daysDiff <= 7
-                        ? "bg-yellow-100 hover:bg-yellow-200"
-                        : "bg-green-100 hover:bg-green-200";
+                      timeDiff < 0
+                        ? "bg-red-200 hover:bg-red-300"
+                        : daysDiff <= 3
+                          ? "bg-orange-100 hover:bg-orange-200"
+                          : daysDiff <= 7
+                            ? "bg-yellow-100 hover:bg-yellow-200"
+                            : "bg-green-100 hover:bg-green-200";
 
                 return (
                   <TableRow key={row.id} className={bgColor}>
@@ -341,5 +341,13 @@ export default function BeduPage() {
         </Button>
       </div>
     </div>
+  );
+}
+
+export default function BeduPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BeduContent />
+    </Suspense>
   );
 }
