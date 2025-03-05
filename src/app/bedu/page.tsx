@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
 import {
   Table,
@@ -31,6 +32,8 @@ import { columns } from "./columns";
 import { SearchInput } from "./components/search-input";
 
 export default function BeduPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   useEffect(() => {
     // Calculate and set header height for sticky positioning
     const headerElement = document.querySelector('.sticky:first-child');
@@ -42,8 +45,8 @@ export default function BeduPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [globalFilter, setGlobalFilter] = useState(searchParams.get("q") || "");
+  const [currentPage, setCurrentPage] = useState(searchParams.get("page") ? parseInt(searchParams.get("page") as string, 10) : 1);
   const [perPage] = useState(50);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -140,7 +143,7 @@ export default function BeduPage() {
   return (
   <div className="container mx-auto">
     <div className="sticky top-0 bg-background z-10 pb-2">
-        <div className="flex items-center pt-4 pb-1 gap-4">
+        <div className="flex items-center pt-4 gap-4">
           <div className="flex flex-col gap-2 w-full">
             <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-start">
               <div className="w-full md:w-1/2">
@@ -149,6 +152,15 @@ export default function BeduPage() {
                   onChange={(value) => {
                     setGlobalFilter(value);
                     setCurrentPage(1); // Reset to first page when searching
+
+                    // Update URL with search query
+                    const params = new URLSearchParams(searchParams.toString());
+                    if (value) {
+                      params.set("q", value);
+                    } else {
+                      params.delete("q");
+                    }
+                    router.push(`?${params.toString()}`);
                   }}
                   totalResults={table.getFilteredRowModel().rows.length}
                 />
@@ -292,7 +304,15 @@ export default function BeduPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+          onClick={() => {
+            const newPage = Math.max(1, currentPage - 1);
+            setCurrentPage(newPage);
+
+            // Update URL with page number
+            const params = new URLSearchParams(searchParams.toString());
+            params.set("page", newPage.toString());
+            router.push(`?${params.toString()}`);
+          }}
           disabled={currentPage === 1}
         >
           上一页
@@ -303,9 +323,15 @@ export default function BeduPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-          }
+          onClick={() => {
+            const newPage = Math.min(totalPages, currentPage + 1);
+            setCurrentPage(newPage);
+
+            // Update URL with page number
+            const params = new URLSearchParams(searchParams.toString());
+            params.set("page", newPage.toString());
+            router.push(`?${params.toString()}`);
+          }}
           disabled={currentPage === totalPages}
         >
           下一页
