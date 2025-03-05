@@ -63,7 +63,7 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
               expTime.setDate(expTime.getDate() + days);
 
               try {
-                const record =  await pb.collection('baidu_edu_users').create({
+                await pb.collection('baidu_edu_users').create({
                   name: nameInput.value,
                   remark: remarkInput.value,
                   exp_time: expTime.toISOString(),

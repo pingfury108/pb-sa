@@ -53,44 +53,45 @@ export default function BeduPage() {
   const [isLoading, setIsLoading] = useState(false);
 
 
-  useEffect(() => {
-    const fetchAndUpdateUsers = async (page = currentPage, search = globalFilter) => {
-      try {
-        setIsLoading(true);
-        const result = await pb
-          .collection("baidu_edu_users")
-          .getList(page, perPage, {
-            sort: "-exp_time",
-            ...(search
-              ? {
-                filter: `name ~ "${search}" || id ~ "${search}" || remark ~ "${search}"`,
-              }
-              : {}),
-          });
-
-        const mappedUsers = result.items.map((record) => ({
-          id: record.id,
-          name: record.name,
-          remark: record.remark,
-          created: record.created,
-          updated: record.updated,
-          exp_time: record.exp_time,
-        }));
-
-        setUsers(mappedUsers);
-        setTotalPages(result.totalPages);
-        setTotalItems(result.totalItems);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch users: " + (error instanceof Error ? error.message : String(error)),
-          variant: "destructive",
+  const fetchAndUpdateUsers = async (page = currentPage, search = globalFilter) => {
+    try {
+      setIsLoading(true);
+      const result = await pb
+        .collection("baidu_edu_users")
+        .getList(page, perPage, {
+          sort: "-exp_time",
+          ...(search
+            ? {
+              filter: `name ~ "${search}" || id ~ "${search}" || remark ~ "${search}"`,
+            }
+            : {}),
         });
-        setIsLoading(false);
-      }
-    };
+
+      const mappedUsers = result.items.map((record) => ({
+        id: record.id,
+        name: record.name,
+        remark: record.remark,
+        created: record.created,
+        updated: record.updated,
+        exp_time: record.exp_time,
+      }));
+
+      setUsers(mappedUsers);
+      setTotalPages(result.totalPages);
+      setTotalItems(result.totalItems);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch users: " + (error instanceof Error ? error.message : String(error)),
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchAndUpdateUsers(currentPage, globalFilter);
   }, [currentPage, globalFilter, perPage]);
 
@@ -168,13 +169,13 @@ export default function BeduPage() {
               </div>
               <div className="w-full md:w-1/2">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2 md:mb-0">
-                  <UserCreateForm onSuccess={() => {
+                  <UserCreateForm onSuccess={async () => {
                     setCurrentPage(1);
-                    fetchAndUpdateUsers(1, globalFilter);
+                    await fetchAndUpdateUsers(1, globalFilter);
                   }} />
-                  <BatchUserCreateForm onSuccess={() => {
+                  <BatchUserCreateForm onSuccess={async () => {
                     setCurrentPage(1);
-                    fetchAndUpdateUsers(1, globalFilter);
+                    await fetchAndUpdateUsers(1, globalFilter);
                   }} />
 
                   <Button
