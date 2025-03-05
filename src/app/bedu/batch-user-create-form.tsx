@@ -134,8 +134,11 @@ export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
                   description: `成功创建 ${count} 个用户`,
                 });
                 
-                if (onSuccess) await onSuccess();
-                window.location.reload();
+                if (onSuccess) {
+                  await onSuccess();
+                } else {
+                  window.location.reload();
+                }
               } catch (error) {
                 console.error('Error creating batch users:', error);
                 toast({

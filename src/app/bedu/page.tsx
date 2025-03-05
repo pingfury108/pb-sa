@@ -22,7 +22,6 @@ import {
 } from "@tanstack/react-table";
 import { pb } from "@/lib/pocketbase";
 import { Button } from "@/components/ui/button";
-import { Sheet } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { UserCreateForm } from "./user-create-form";
@@ -30,10 +29,8 @@ import { BatchUserCreateForm } from "./batch-user-create-form";
 import type { User } from "./types";
 import { columns } from "./columns";
 import { SearchInput } from "./components/search-input";
-// ActionButtons component is now defined directly in this file
 
 export default function BeduPage() {
-  // Buttons have been moved inline
   const [users, setUsers] = useState<User[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -45,42 +42,46 @@ export default function BeduPage() {
   const [rowSelection, setRowSelection] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    async function fetchUsers() {
-      try {
-        setIsLoading(true);
-        // Always use pagination with perPage items
-        const result = await pb
-          .collection("baidu_edu_users")
-          .getList(currentPage, perPage, {
-            sort: "-exp_time",
-            ...(globalFilter
-              ? {
-                  filter: `name ~ "${globalFilter}" || id ~ "${globalFilter}" || remark ~ "${globalFilter}"`,
-                }
-              : {}),
-          });
+  const fetchAndUpdateUsers = async (page = currentPage, search = globalFilter) => {
+    try {
+      setIsLoading(true);
+      const result = await pb
+        .collection("baidu_edu_users")
+        .getList(page, perPage, {
+          sort: "-exp_time",
+          ...(search
+            ? {
+                filter: `name ~ "${search}" || id ~ "${search}" || remark ~ "${search}"`,
+              }
+            : {}),
+        });
 
-        const mappedUsers = result.items.map((record) => ({
-          id: record.id,
-          name: record.name,
-          remark: record.remark,
-          created: record.created,
-          updated: record.updated,
-          exp_time: record.exp_time,
-        }));
+      const mappedUsers = result.items.map((record) => ({
+        id: record.id,
+        name: record.name,
+        remark: record.remark,
+        created: record.created,
+        updated: record.updated,
+        exp_time: record.exp_time,
+      }));
 
-        setUsers(mappedUsers);
-        setTotalPages(result.totalPages);
-        setTotalItems(result.totalItems);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        setIsLoading(false);
-      }
+      setUsers(mappedUsers);
+      setTotalPages(result.totalPages);
+      setTotalItems(result.totalItems);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch users: " + (error instanceof Error ? error.message : String(error)),
+        variant: "destructive",
+      });
+      setIsLoading(false);
     }
+  };
 
-    fetchUsers();
+  useEffect(() => {
+    fetchAndUpdateUsers(currentPage, globalFilter);
   }, [currentPage, globalFilter, perPage]);
 
   const table = useReactTable({
@@ -109,47 +110,14 @@ export default function BeduPage() {
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
       pagination: {
-        pageSize: 50, // 设置与后端一致的页面大小
+        pageSize: 50, // Set page size to match the backend
       },
     },
-  });
+    });
 
-  const refreshUserList = async () => {
-    try {
-      setIsLoading(true);
-      const result = await pb
-        .collection("baidu_edu_users")
-        .getList(1, perPage, {
-          sort: "-exp_time",
-        });
-      const mappedUsers = result.items.map((record) => ({
-        id: record.id,
-        name: record.name,
-        remark: record.remark,
-        created: record.created,
-        updated: record.updated,
-        exp_time: record.exp_time,
-      }));
-      setUsers(mappedUsers);
-      setTotalPages(result.totalPages);
-      setTotalItems(result.totalItems);
-      setCurrentPage(1);
-      setIsLoading(false);
-    } catch (error: unknown) {
-      console.error("Failed to fetch users:", error);
-      toast({
-        title: "Error",
-        description:
-          "Failed to refresh user list: " +
-          (error instanceof Error ? error.message : String(error)),
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
-  };
-  return (
+    return (
     <div className="container mx-auto">
-      <div className="sticky top-0 bg-background z-10 pb-2">
+      <div className="sticky bg-background z-10 pb-2">
         <div className="flex items-center pt-4 pb-2 gap-4">
           <div className="flex flex-col gap-2 w-full">
             <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-start">
@@ -165,59 +133,15 @@ export default function BeduPage() {
               </div>
               <div className="w-full md:w-1/2">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2 md:mb-0">
-                  <UserCreateForm onSuccess={async () => {
+                  <UserCreateForm onSuccess={() => {
                     setCurrentPage(1);
-                    try {
-                      const result = await pb.collection('baidu_edu_users').getList(1, perPage, {
-                        sort: '-exp_time',
-                      });
-                      const mappedUsers = result.items.map(record => ({
-                        id: record.id,
-                        name: record.name,
-                        remark: record.remark,
-                        created: record.created,
-                        updated: record.updated,
-                        exp_time: record.exp_time
-                      }));
-                      setUsers(mappedUsers);
-                      setTotalPages(result.totalPages);
-                      setTotalItems(result.totalItems);
-                    } catch (error: unknown) {
-                      console.error('Failed to fetch users:', error);
-                      toast({
-                        title: "Error",
-                        description: "Failed to refresh user list: " + (error instanceof Error ? error.message : String(error)),
-                        variant: "destructive",
-                      });
-                    }
+                    fetchAndUpdateUsers(1, globalFilter);
                   }} />
-                  <BatchUserCreateForm onSuccess={async () => {
+                  <BatchUserCreateForm onSuccess={() => {
                     setCurrentPage(1);
-                    try {
-                      const result = await pb.collection('baidu_edu_users').getList(1, perPage, {
-                        sort: '-exp_time',
-                      });
-                      const mappedUsers = result.items.map(record => ({
-                        id: record.id,
-                        name: record.name,
-                        remark: record.remark,
-                        created: record.created,
-                        updated: record.updated,
-                        exp_time: record.exp_time
-                      }));
-                      setUsers(mappedUsers);
-                      setTotalPages(result.totalPages);
-                      setTotalItems(result.totalItems);
-                    } catch (error: unknown) {
-                      console.error('Failed to fetch users:', error);
-                      toast({
-                        title: "Error",
-                        description: "Failed to refresh user list: " + (error instanceof Error ? error.message : String(error)),
-                        variant: "destructive",
-                      });
-                    }
+                    fetchAndUpdateUsers(1, globalFilter);
                   }} />
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -233,7 +157,7 @@ export default function BeduPage() {
                   >
                     复制所选ID ({Object.keys(rowSelection).length})
                   </Button>
-                  
+
                   <Button
                     variant="destructive"
                     size="sm"
@@ -253,20 +177,7 @@ export default function BeduPage() {
                         setRowSelection({});
                         // Refresh the list
                         setCurrentPage(1);
-                        const result = await pb.collection('baidu_edu_users').getList(1, perPage, {
-                          sort: '-exp_time',
-                        });
-                        const mappedUsers = result.items.map(record => ({
-                          id: record.id,
-                          name: record.name,
-                          remark: record.remark,
-                          created: record.created,
-                          updated: record.updated,
-                          exp_time: record.exp_time
-                        }));
-                        setUsers(mappedUsers);
-                        setTotalPages(result.totalPages);
-                        setTotalItems(result.totalItems);
+                        fetchAndUpdateUsers(1, globalFilter);
                       } catch (error: unknown) {
                         console.error('Failed to delete users:', error);
                         alert('删除失败：' + (error instanceof Error ? error.message : String(error)));
@@ -282,7 +193,7 @@ export default function BeduPage() {
           </div>
         </div>
       </div>
-      <div className="sticky top-[72px] bg-background z-10 mb-1">
+      <div className="sticky mt-1 bg-background z-10 mb-1">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

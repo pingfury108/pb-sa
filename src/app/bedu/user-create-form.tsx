@@ -68,8 +68,11 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
                   remark: remarkInput.value,
                   exp_time: expTime.toISOString(),
                 });
-                if (onSuccess) await onSuccess();
-                window.location.reload();
+                if (onSuccess) {
+                  await onSuccess();
+                } else {
+                  window.location.reload();
+                }
               } catch (error) {
                 console.error('Error creating user:', error);
               }
