@@ -11,14 +11,12 @@ import {
 } from "@/components/ui/sheet"
 import { pb } from "@/lib/pocketbase"
 import { toast } from "@/hooks/use-toast"
-import { useRouter } from "next/navigation"
 
 interface BatchUserCreateFormProps {
   onSuccess?: () => Promise<void>;
 }
 
 export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
-  const router = useRouter();
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -68,13 +66,13 @@ export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
               const countInput = document.getElementById('count') as HTMLInputElement;
               const remarkInput = document.getElementById('remark') as HTMLInputElement;
               const daysInput = document.getElementById('batch_days') as HTMLInputElement;
-              
+
               const prefix = prefixInput.value.trim();
               const startNum = parseInt(startNumInput.value);
               const count = parseInt(countInput.value);
               const remark = remarkInput.value;
               const days = parseInt(daysInput.value);
-              
+
               if (!prefix) {
                 toast({
                   title: "错误",
@@ -83,7 +81,7 @@ export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
                 });
                 return;
               }
-              
+
               if (isNaN(count) || count < 1) {
                 toast({
                   title: "错误",
@@ -92,7 +90,7 @@ export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
                 });
                 return;
               }
-              
+
               if (isNaN(startNum) || startNum < 1) {
                 toast({
                   title: "错误",
@@ -101,7 +99,7 @@ export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
                 });
                 return;
               }
-              
+
               if (isNaN(days) || days < 1) {
                 toast({
                   title: "错误",
@@ -110,16 +108,16 @@ export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
                 });
                 return;
               }
-              
+
               const expTime = new Date();
               expTime.setDate(expTime.getDate() + days);
-              
+
               try {
                 toast({
                   title: "处理中",
                   description: `正在创建 ${count} 个用户...`,
                 });
-                
+
                 // Create users sequentially to avoid overwhelming the server
                 for (let i = 0; i < count; i++) {
                   const currentNum = startNum + i;
@@ -130,21 +128,21 @@ export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
                     exp_time: expTime.toISOString(),
                   });
                 }
-                
+
                 toast({
                   title: "成功",
                   description: `成功创建 ${count} 个用户`,
                 });
-                
+
                 // Set URL query param to the prefix and reload
                 const params = new URLSearchParams();
                 params.set("q", prefix);
-                
+
                 // First call onSuccess to ensure data is properly updated
                 if (onSuccess) {
                   await onSuccess();
                 }
-                
+
                 // Force reload with the new query parameter to show the newly created users
                 window.location.href = `?${params.toString()}`;
               } catch (error) {

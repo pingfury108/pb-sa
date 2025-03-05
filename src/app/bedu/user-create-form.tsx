@@ -10,14 +10,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { pb } from "@/lib/pocketbase"
-import { useRouter } from "next/navigation"
 
 interface UserCreateFormProps {
   onSuccess?: () => Promise<void>;
 }
 
 export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
-  const router = useRouter();
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -58,28 +56,28 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
               const remarkInput = document.getElementById('remark') as HTMLInputElement;
               const daysInput = document.getElementById('days') as HTMLInputElement;
               const days = parseInt(daysInput.value);
-              
+
               if (isNaN(days) || days < 1) return;
-              
+
               const expTime = new Date();
               expTime.setDate(expTime.getDate() + days);
-              
+
               try {
-                const record = await pb.collection('baidu_edu_users').create({
+                const record =  await pb.collection('baidu_edu_users').create({
                   name: nameInput.value,
                   remark: remarkInput.value,
                   exp_time: expTime.toISOString(),
                 });
-                
+
                 // Set URL query param to new user's name and reload
                 const params = new URLSearchParams();
                 params.set("q", nameInput.value);
-                
+
                 // First call onSuccess to ensure data is properly updated
                 if (onSuccess) {
                   await onSuccess();
                 }
-                
+
                 // Force reload with the new query parameter to show the newly created user
                 window.location.href = `?${params.toString()}`;
               } catch (error) {

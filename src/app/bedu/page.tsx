@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams} from "next/navigation";
 import { toast } from "@/hooks/use-toast";
 import {
   Table,
@@ -32,7 +32,6 @@ import { columns } from "./columns";
 import { SearchInput } from "./components/search-input";
 
 export default function BeduPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   useEffect(() => {
     // Calculate and set header height for sticky positioning
@@ -53,45 +52,45 @@ export default function BeduPage() {
   const [rowSelection, setRowSelection] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchAndUpdateUsers = async (page = currentPage, search = globalFilter) => {
-    try {
-      setIsLoading(true);
-      const result = await pb
-        .collection("baidu_edu_users")
-        .getList(page, perPage, {
-          sort: "-exp_time",
-          ...(search
-            ? {
-                filter: `name ~ "${search}" || id ~ "${search}" || remark ~ "${search}"`,
-              }
-            : {}),
-        });
-
-      const mappedUsers = result.items.map((record) => ({
-        id: record.id,
-        name: record.name,
-        remark: record.remark,
-        created: record.created,
-        updated: record.updated,
-        exp_time: record.exp_time,
-      }));
-
-      setUsers(mappedUsers);
-      setTotalPages(result.totalPages);
-      setTotalItems(result.totalItems);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch users: " + (error instanceof Error ? error.message : String(error)),
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
-  };
 
   useEffect(() => {
+    const fetchAndUpdateUsers = async (page = currentPage, search = globalFilter) => {
+      try {
+        setIsLoading(true);
+        const result = await pb
+          .collection("baidu_edu_users")
+          .getList(page, perPage, {
+            sort: "-exp_time",
+            ...(search
+              ? {
+                filter: `name ~ "${search}" || id ~ "${search}" || remark ~ "${search}"`,
+              }
+              : {}),
+          });
+
+        const mappedUsers = result.items.map((record) => ({
+          id: record.id,
+          name: record.name,
+          remark: record.remark,
+          created: record.created,
+          updated: record.updated,
+          exp_time: record.exp_time,
+        }));
+
+        setUsers(mappedUsers);
+        setTotalPages(result.totalPages);
+        setTotalItems(result.totalItems);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch users: " + (error instanceof Error ? error.message : String(error)),
+          variant: "destructive",
+        });
+        setIsLoading(false);
+      }
+    };
     fetchAndUpdateUsers(currentPage, globalFilter);
   }, [currentPage, globalFilter, perPage]);
 

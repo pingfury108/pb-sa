@@ -11,14 +11,12 @@ import {
 } from "@/components/ui/sheet"
 import { pb } from "@/lib/pocketbase"
 import type { User } from "./types"
-import { useRouter } from "next/navigation"
 
 interface UserRenewFormProps {
   user: User
 }
 
 export function UserRenewForm({ user }: UserRenewFormProps) {
-  const router = useRouter();
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -105,9 +103,9 @@ export function UserRenewForm({ user }: UserRenewFormProps) {
               const remarkInput = document.getElementById('remark') as HTMLInputElement;
               const daysInput = document.getElementById('days') as HTMLInputElement;
               const days = parseInt(daysInput.value);
-              
+
               if (isNaN(days) || days < 1) return;
-              
+
               const currentTime = new Date();
               const userExpTime = new Date(user.exp_time);
               const expTime = new Date(
@@ -115,7 +113,7 @@ export function UserRenewForm({ user }: UserRenewFormProps) {
                   ? userExpTime.getTime() + days * 24 * 60 * 60 * 1000
                   : currentTime.getTime() + days * 24 * 60 * 60 * 1000
               );
-              
+
               try {
                 await pb.collection('baidu_edu_users').update(user.id, {
                   name: nameInput.value,
