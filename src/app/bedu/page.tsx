@@ -31,6 +31,14 @@ import { columns } from "./columns";
 import { SearchInput } from "./components/search-input";
 
 export default function BeduPage() {
+  useEffect(() => {
+    // Calculate and set header height for sticky positioning
+    const headerElement = document.querySelector('.sticky:first-child');
+    if (headerElement) {
+      const height = headerElement.clientHeight;
+      document.documentElement.style.setProperty('--header-height', `${height}px`);
+    }
+  }, []);
   const [users, setUsers] = useState<User[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -84,6 +92,20 @@ export default function BeduPage() {
     fetchAndUpdateUsers(currentPage, globalFilter);
   }, [currentPage, globalFilter, perPage]);
 
+  useEffect(() => {
+    // Update header height on window resize
+    const updateHeaderHeight = () => {
+      const headerElement = document.querySelector('.sticky:first-child');
+      if (headerElement) {
+        const height = headerElement.clientHeight;
+        document.documentElement.style.setProperty('--header-height', `${height}px`);
+      }
+    };
+
+    window.addEventListener('resize', updateHeaderHeight);
+    return () => window.removeEventListener('resize', updateHeaderHeight);
+  }, []);
+
   const table = useReactTable({
     data: users,
     columns,
@@ -115,10 +137,10 @@ export default function BeduPage() {
     },
     });
 
-    return (
-    <div className="container mx-auto">
-      <div className="sticky bg-background z-10 pb-2">
-        <div className="flex items-center pt-4 pb-2 gap-4">
+  return (
+  <div className="container mx-auto">
+    <div className="sticky top-0 bg-background z-10 pb-2">
+        <div className="flex items-center pt-4 pb-1 gap-4">
           <div className="flex flex-col gap-2 w-full">
             <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-start">
               <div className="w-full md:w-1/2">
@@ -193,7 +215,7 @@ export default function BeduPage() {
           </div>
         </div>
       </div>
-      <div className="sticky mt-1 bg-background z-10 mb-1">
+      <div className="sticky top-[calc(var(--header-height,4rem))] mt-1 bg-background z-10 mb-1">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -215,7 +237,7 @@ export default function BeduPage() {
           </TableHeader>
         </Table>
       </div>
-      <div className="rounded-md border">
+      <div className="rounded-md border max-h-[calc(100vh-12rem)] overflow-y-auto">
         <Table>
           <TableBody>
             {isLoading ? (
@@ -266,19 +288,21 @@ export default function BeduPage() {
           </TableBody>
         </Table>
       </div>
-      <div className="flex justify-center gap-2 my-4">
+      <div className="flex justify-center gap-2 my-2">
         <Button
           variant="outline"
+          size="sm"
           onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
           disabled={currentPage === 1}
         >
           上一页
         </Button>
-        <span className="flex items-center px-4">
+        <span className="flex items-center px-2 text-sm">
           第 {currentPage} 页 / 共 {totalPages} 页 (总计 {totalItems} 条)
         </span>
         <Button
           variant="outline"
+          size="sm"
           onClick={() =>
             setCurrentPage((prev) => Math.min(totalPages, prev + 1))
           }
