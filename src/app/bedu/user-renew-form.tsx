@@ -11,12 +11,22 @@ import {
 } from "@/components/ui/sheet"
 import { pb } from "@/lib/pocketbase"
 import type { User } from "./types"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { useState } from "react"
 
 interface UserRenewFormProps {
   user: User
 }
 
 export function UserRenewForm({ user }: UserRenewFormProps) {
+  const [xufeiType, setXufeiType] = useState(user.xufei_type || "day")
+  
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -47,6 +57,33 @@ export function UserRenewForm({ user }: UserRenewFormProps) {
               defaultValue={user.remark}
               className="w-full"
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="limit">配额</Label>
+            <Input
+              id="limit"
+              type="number"
+              min="0"
+              defaultValue={user.limit?.toString() || "0"}
+              className="w-full"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="xufei_type">续费类型</Label>
+            <Select 
+              defaultValue={user.xufei_type || "day"} 
+              onValueChange={setXufeiType}
+              value={xufeiType}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="选择续费类型" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">天</SelectItem>
+                <SelectItem value="week">周</SelectItem>
+                <SelectItem value="month">月</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="days">续费天数</Label>
@@ -102,7 +139,9 @@ export function UserRenewForm({ user }: UserRenewFormProps) {
               const nameInput = document.getElementById('name') as HTMLInputElement;
               const remarkInput = document.getElementById('remark') as HTMLInputElement;
               const daysInput = document.getElementById('days') as HTMLInputElement;
+              const limitInput = document.getElementById('limit') as HTMLInputElement;
               const days = parseInt(daysInput.value);
+              const limit = parseInt(limitInput.value);
 
               if (isNaN(days) || days < 1) return;
 
@@ -119,6 +158,8 @@ export function UserRenewForm({ user }: UserRenewFormProps) {
                   name: nameInput.value,
                   remark: remarkInput.value,
                   exp_time: expTime.toISOString(),
+                  limit: isNaN(limit) ? 0 : limit,
+                  xufei_type: xufeiType,
                 });
                 // Set URL query param to the updated user's name and reload
                 const params = new URLSearchParams();

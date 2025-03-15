@@ -73,6 +73,8 @@ function BeduContent() {
         created: record.created,
         updated: record.updated,
         exp_time: record.exp_time,
+        limit: record.limit,
+        xufei_type: record.xufei_type,
       }));
 
       setUsers(mappedUsers);

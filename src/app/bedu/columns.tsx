@@ -97,6 +97,43 @@ export const columns: ColumnDef<User>[] = [
     },
   },
   {
+    accessorKey: "limit",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          配额
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
+  },
+  {
+    accessorKey: "xufei_type",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          续费类型
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
+    cell: ({ row }) => {
+      const type = row.getValue("xufei_type") as string
+      const typeMap: Record<string, string> = {
+        day: "天",
+        week: "周",
+        month: "月"
+      }
+      return typeMap[type] || type
+    },
+  },
+  {
     accessorKey: "remark",
     header: "备注",
   },

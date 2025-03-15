@@ -11,12 +11,22 @@ import {
 } from "@/components/ui/sheet"
 import { pb } from "@/lib/pocketbase"
 import { toast } from "@/hooks/use-toast"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { useState } from "react"
 
 interface BatchUserCreateFormProps {
   onSuccess?: () => Promise<void>;
 }
 
 export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
+  const [xufeiType, setXufeiType] = useState("day")
+  
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -47,6 +57,33 @@ export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
             <Input id="remark" placeholder="所有批量创建的用户共用此备注" className="w-full" />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="limit">配额</Label>
+            <Input
+              id="batch_limit"
+              type="number"
+              min="0"
+              defaultValue="0"
+              className="w-full"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="xufei_type">续费类型</Label>
+            <Select 
+              defaultValue="day"
+              value={xufeiType}
+              onValueChange={setXufeiType}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="选择续费类型" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">天</SelectItem>
+                <SelectItem value="week">周</SelectItem>
+                <SelectItem value="month">月</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="exp_time">过期时间</Label>
             <div className="flex gap-2">
               <Input
@@ -66,12 +103,14 @@ export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
               const countInput = document.getElementById('count') as HTMLInputElement;
               const remarkInput = document.getElementById('remark') as HTMLInputElement;
               const daysInput = document.getElementById('batch_days') as HTMLInputElement;
+              const limitInput = document.getElementById('batch_limit') as HTMLInputElement;
 
               const prefix = prefixInput.value.trim();
               const startNum = parseInt(startNumInput.value);
               const count = parseInt(countInput.value);
               const remark = remarkInput.value;
               const days = parseInt(daysInput.value);
+              const limit = parseInt(limitInput.value);
 
               if (!prefix) {
                 toast({
@@ -126,6 +165,8 @@ export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
                     name: userName,
                     remark: remark,
                     exp_time: expTime.toISOString(),
+                    limit: isNaN(limit) ? 0 : limit,
+                    xufei_type: xufeiType,
                   });
                 }
 

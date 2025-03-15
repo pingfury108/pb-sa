@@ -10,12 +10,22 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { pb } from "@/lib/pocketbase"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { useState } from "react"
 
 interface UserCreateFormProps {
   onSuccess?: () => Promise<void>;
 }
 
 export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
+  const [xufeiType, setXufeiType] = useState("day")
+  
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -38,6 +48,33 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
             <Input id="remark" className="w-full" />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="limit">配额</Label>
+            <Input
+              id="limit"
+              type="number"
+              min="0"
+              defaultValue="0"
+              className="w-full"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="xufei_type">续费类型</Label>
+            <Select 
+              defaultValue="day"
+              value={xufeiType}
+              onValueChange={setXufeiType}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="选择续费类型" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">天</SelectItem>
+                <SelectItem value="week">周</SelectItem>
+                <SelectItem value="month">月</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="exp_time">过期时间</Label>
             <div className="flex gap-2">
               <Input
@@ -55,7 +92,9 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
               const nameInput = document.getElementById('name') as HTMLInputElement;
               const remarkInput = document.getElementById('remark') as HTMLInputElement;
               const daysInput = document.getElementById('days') as HTMLInputElement;
+              const limitInput = document.getElementById('limit') as HTMLInputElement;
               const days = parseInt(daysInput.value);
+              const limit = parseInt(limitInput.value);
 
               if (isNaN(days) || days < 1) return;
 
@@ -67,6 +106,8 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
                   name: nameInput.value,
                   remark: remarkInput.value,
                   exp_time: expTime.toISOString(),
+                  limit: isNaN(limit) ? 0 : limit,
+                  xufei_type: xufeiType,
                 });
 
                 // Set URL query param to new user's name and reload

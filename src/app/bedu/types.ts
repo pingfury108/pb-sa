@@ -5,4 +5,6 @@ export interface User {
   created: string
   updated: string
   exp_time: string
+  limit: number
+  xufei_type: string
 }
