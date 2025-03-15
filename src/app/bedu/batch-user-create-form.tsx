@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface BatchUserCreateFormProps {
   onSuccess?: () => Promise<void>;
@@ -26,6 +26,24 @@ interface BatchUserCreateFormProps {
 
 export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
   const [xufeiType, setXufeiType] = useState("day")
+  const [days, setDays] = useState(1)
+  
+  // Update days value when renewal type changes
+  useEffect(() => {
+    switch (xufeiType) {
+      case "day":
+        setDays(1)
+        break
+      case "week":
+        setDays(7)
+        break
+      case "month":
+        setDays(30)
+        break
+      default:
+        setDays(1)
+    }
+  }, [xufeiType])
   
   return (
     <Sheet>
@@ -90,7 +108,8 @@ export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
                 id="batch_days"
                 type="number"
                 min="1"
-                defaultValue="1"
+                value={days}
+                onChange={(e) => setDays(parseInt(e.target.value))}
                 className="w-20"
               />
               <span>天</span>
@@ -102,14 +121,12 @@ export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
               const startNumInput = document.getElementById('startNum') as HTMLInputElement;
               const countInput = document.getElementById('count') as HTMLInputElement;
               const remarkInput = document.getElementById('remark') as HTMLInputElement;
-              const daysInput = document.getElementById('batch_days') as HTMLInputElement;
               const limitInput = document.getElementById('batch_limit') as HTMLInputElement;
 
               const prefix = prefixInput.value.trim();
               const startNum = parseInt(startNumInput.value);
               const count = parseInt(countInput.value);
               const remark = remarkInput.value;
-              const days = parseInt(daysInput.value);
               const limit = parseInt(limitInput.value);
 
               if (!prefix) {

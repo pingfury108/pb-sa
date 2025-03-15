@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface UserRenewFormProps {
   user: User
@@ -26,6 +26,50 @@ interface UserRenewFormProps {
 
 export function UserRenewForm({ user }: UserRenewFormProps) {
   const [xufeiType, setXufeiType] = useState(user.xufei_type || "day")
+  const [days, setDays] = useState(1)
+  
+  // Update days value when renewal type changes
+  useEffect(() => {
+    switch (xufeiType) {
+      case "day":
+        setDays(1)
+        break
+      case "week":
+        setDays(7)
+        break
+      case "month":
+        setDays(30)
+        break
+      default:
+        setDays(1)
+    }
+    
+    // Update expiration date display
+    updateExpirationDate(days)
+  }, [xufeiType])
+  
+  // Function to update expiration date display
+  const updateExpirationDate = (daysValue: number) => {
+    const expDate = document.getElementById('exp-date');
+    if (expDate && !isNaN(daysValue)) {
+      const currentTime = new Date();
+      const userExpTime = new Date(user.exp_time);
+      const newExpTime = new Date(
+        userExpTime > currentTime
+          ? userExpTime.getTime() + daysValue * 24 * 60 * 60 * 1000
+          : currentTime.getTime() + daysValue * 24 * 60 * 60 * 1000
+      );
+      expDate.textContent = newExpTime.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).replace(/\//g, '-');
+    }
+  }
   
   return (
     <Sheet>
@@ -92,29 +136,12 @@ export function UserRenewForm({ user }: UserRenewFormProps) {
                 id="days"
                 type="number"
                 min="1"
-                defaultValue="1"
+                value={days}
                 className="w-20"
                 onChange={(e) => {
-                  const days = parseInt(e.target.value);
-                  const expDate = document.getElementById('exp-date');
-                  if (expDate && !isNaN(days)) {
-                    const currentTime = new Date();
-                    const userExpTime = new Date(user.exp_time);
-                    const newExpTime = new Date(
-                      userExpTime > currentTime
-                        ? userExpTime.getTime() + days * 24 * 60 * 60 * 1000
-                        : currentTime.getTime() + days * 24 * 60 * 60 * 1000
-                    );
-                    expDate.textContent = newExpTime.toLocaleString('zh-CN', {
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                      hour12: false
-                    }).replace(/\//g, '-');
-                  }
+                  const newDays = parseInt(e.target.value);
+                  setDays(newDays);
+                  updateExpirationDate(newDays);
                 }}
               />
               <span>天</span>
@@ -138,9 +165,7 @@ export function UserRenewForm({ user }: UserRenewFormProps) {
             onClick={async () => {
               const nameInput = document.getElementById('name') as HTMLInputElement;
               const remarkInput = document.getElementById('remark') as HTMLInputElement;
-              const daysInput = document.getElementById('days') as HTMLInputElement;
               const limitInput = document.getElementById('limit') as HTMLInputElement;
-              const days = parseInt(daysInput.value);
               const limit = parseInt(limitInput.value);
 
               if (isNaN(days) || days < 1) return;

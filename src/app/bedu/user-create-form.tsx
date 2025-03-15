@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface UserCreateFormProps {
   onSuccess?: () => Promise<void>;
@@ -25,6 +25,24 @@ interface UserCreateFormProps {
 
 export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
   const [xufeiType, setXufeiType] = useState("day")
+  const [days, setDays] = useState(1)
+  
+  // Update days value when renewal type changes
+  useEffect(() => {
+    switch (xufeiType) {
+      case "day":
+        setDays(1)
+        break
+      case "week":
+        setDays(7)
+        break
+      case "month":
+        setDays(30)
+        break
+      default:
+        setDays(1)
+    }
+  }, [xufeiType])
   
   return (
     <Sheet>
@@ -81,7 +99,8 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
                 id="days"
                 type="number"
                 min="1"
-                defaultValue="1"
+                value={days}
+                onChange={(e) => setDays(parseInt(e.target.value))}
                 className="w-20"
               />
               <span>天</span>
@@ -91,9 +110,7 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
             onClick={async () => {
               const nameInput = document.getElementById('name') as HTMLInputElement;
               const remarkInput = document.getElementById('remark') as HTMLInputElement;
-              const daysInput = document.getElementById('days') as HTMLInputElement;
               const limitInput = document.getElementById('limit') as HTMLInputElement;
-              const days = parseInt(daysInput.value);
               const limit = parseInt(limitInput.value);
 
               if (isNaN(days) || days < 1) return;
