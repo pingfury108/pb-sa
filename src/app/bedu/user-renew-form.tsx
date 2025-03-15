@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 interface UserRenewFormProps {
   user: User
@@ -28,28 +28,8 @@ export function UserRenewForm({ user }: UserRenewFormProps) {
   const [xufeiType, setXufeiType] = useState(user.xufei_type || "day")
   const [days, setDays] = useState(1)
   
-  // Update days value when renewal type changes
-  useEffect(() => {
-    switch (xufeiType) {
-      case "day":
-        setDays(1)
-        break
-      case "week":
-        setDays(7)
-        break
-      case "month":
-        setDays(30)
-        break
-      default:
-        setDays(1)
-    }
-    
-    // Update expiration date display
-    updateExpirationDate(days)
-  }, [xufeiType])
-  
-  // Function to update expiration date display
-  const updateExpirationDate = (daysValue: number) => {
+  // Function to update expiration date display - memoized with useCallback
+  const updateExpirationDate = useCallback((daysValue: number) => {
     const expDate = document.getElementById('exp-date');
     if (expDate && !isNaN(daysValue)) {
       const currentTime = new Date();
@@ -69,7 +49,29 @@ export function UserRenewForm({ user }: UserRenewFormProps) {
         hour12: false
       }).replace(/\//g, '-');
     }
-  }
+  }, [user.exp_time]);
+  
+  // Update days value when renewal type changes
+  useEffect(() => {
+    let newDays = 1;
+    switch (xufeiType) {
+      case "day":
+        newDays = 1
+        break
+      case "week":
+        newDays = 7
+        break
+      case "month":
+        newDays = 30
+        break
+      default:
+        newDays = 1
+    }
+    
+    setDays(newDays)
+    // Update expiration date display
+    updateExpirationDate(newDays)
+  }, [xufeiType, updateExpirationDate])
   
   return (
     <Sheet>
