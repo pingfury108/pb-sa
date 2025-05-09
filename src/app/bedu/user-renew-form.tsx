@@ -21,10 +21,11 @@ import {
 import { useCallback, useEffect, useState } from "react"
 
 interface UserRenewFormProps {
-  user: User
+  user: User;
+  collection?: string;
 }
 
-export function UserRenewForm({ user }: UserRenewFormProps) {
+export function UserRenewForm({ user, collection = 'baidu_edu_users' }: UserRenewFormProps) {
   const [xufeiType, setXufeiType] = useState(user.xufei_type || "day")
   const [days, setDays] = useState(1)
   
@@ -181,7 +182,7 @@ export function UserRenewForm({ user }: UserRenewFormProps) {
               );
 
               try {
-                await pb.collection('baidu_edu_users').update(user.id, {
+                await pb.collection(collection).update(user.id, {
                   name: nameInput.value,
                   remark: remarkInput.value,
                   exp_time: expTime.toISOString(),

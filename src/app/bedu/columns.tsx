@@ -5,7 +5,7 @@ import { ArrowUpDown, Copy } from "lucide-react"
 import { UserRenewForm } from "./user-renew-form"
 import type { User } from "./types"
 
-export const columns: ColumnDef<User>[] = [
+export const getColumns = (collection: string = 'baidu_edu_users'): ColumnDef<User>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -189,6 +189,6 @@ export const columns: ColumnDef<User>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => <UserRenewForm user={row.original} />,
+    cell: ({ row }) => <UserRenewForm user={row.original} collection={collection} />,
   },
 ]

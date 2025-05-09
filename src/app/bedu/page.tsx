@@ -28,7 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UserCreateForm } from "./user-create-form";
 import { BatchUserCreateForm } from "./batch-user-create-form";
 import type { User } from "./types";
-import { columns } from "./columns";
+import { getColumns } from "./columns";
 import { SearchInput } from "./components/search-input";
 
 function BeduContent() {
@@ -51,12 +51,19 @@ function BeduContent() {
   const [totalItems, setTotalItems] = useState(0);
   const [rowSelection, setRowSelection] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [collection, setCollection] = useState(() => {
+    // Try to get the saved collection from localStorage, default to "baidu_edu_users" if not found
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('bedu_collection') || "baidu_edu_users";
+    }
+    return "baidu_edu_users";
+  });
 
   const fetchAndUpdateUsers = useCallback(async (page = currentPage, search = globalFilter) => {
     try {
       setIsLoading(true);
       const result = await pb
-        .collection("baidu_edu_users")
+        .collection(collection)
         .getList(page, perPage, {
           sort: "-exp_time",
           ...(search
@@ -90,11 +97,11 @@ function BeduContent() {
       });
       setIsLoading(false);
     }
-  }, [currentPage, globalFilter, perPage]);
+  }, [currentPage, globalFilter, perPage, collection]);
 
   useEffect(() => {
     fetchAndUpdateUsers(currentPage, globalFilter);
-  }, [fetchAndUpdateUsers, currentPage, globalFilter,]);
+  }, [fetchAndUpdateUsers, currentPage, globalFilter, collection]);
 
   useEffect(() => {
     // Update header height on window resize
@@ -112,7 +119,7 @@ function BeduContent() {
 
   const table = useReactTable({
     data: users,
-    columns,
+    columns: getColumns(collection),
     state: {
       sorting,
       columnFilters,
@@ -146,7 +153,24 @@ function BeduContent() {
       <div className="sticky top-0 bg-background z-10 pb-2">
         <div className="flex items-center pt-4 gap-4">
           <div className="flex flex-col gap-2 w-full">
-            <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-start">
+            <div className="flex items-center gap-2 mb-4">
+              <select
+                id="collection-select"
+                className="h-10 w-64 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={collection}
+                onChange={(e) => {
+                  const newCollection = e.target.value;
+                  setCollection(newCollection);
+                  // Save the selection to localStorage
+                  localStorage.setItem('bedu_collection', newCollection);
+                  setCurrentPage(1); // Reset to first page when changing collection
+                }}
+              >
+                <option value="baidu_edu_users">baidu_edu_users</option>
+                <option value="baidu_edu_users_premium">baidu_edu_users_premium</option>
+              </select>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 mb-4">
               <div className="w-full md:w-1/2">
                 <SearchInput
                   value={globalFilter}
@@ -170,14 +194,20 @@ function BeduContent() {
               </div>
               <div className="w-full md:w-1/2">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2 md:mb-0">
-                  <UserCreateForm onSuccess={async () => {
-                    setCurrentPage(1);
-                    await fetchAndUpdateUsers(1, globalFilter);
-                  }} />
-                  <BatchUserCreateForm onSuccess={async () => {
-                    setCurrentPage(1);
-                    await fetchAndUpdateUsers(1, globalFilter);
-                  }} />
+                  <UserCreateForm 
+                    collection={collection}
+                    onSuccess={async () => {
+                      setCurrentPage(1);
+                      await fetchAndUpdateUsers(1, globalFilter);
+                    }} 
+                  />
+                  <BatchUserCreateForm 
+                    collection={collection}
+                    onSuccess={async () => {
+                      setCurrentPage(1);
+                      await fetchAndUpdateUsers(1, globalFilter);
+                    }} 
+                  />
 
                   <Button
                     variant="outline"
@@ -208,7 +238,7 @@ function BeduContent() {
                         const selectedIds = table.getSelectedRowModel().rows.map(row => row.getValue('id') as string);
                         await Promise.all(
                           selectedIds.map(id =>
-                            pb.collection('baidu_edu_users').delete(id)
+                            pb.collection(collection).delete(id)
                           )
                         );
                         setRowSelection({});
@@ -257,7 +287,7 @@ function BeduContent() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={columns.length}>
+                <TableCell colSpan={getColumns(collection).length}>
                   <Skeleton className="h-4 w-full" />
                 </TableCell>
               </TableRow>
@@ -293,7 +323,7 @@ function BeduContent() {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={getColumns(collection).length}
                   className="h-24 text-center"
                 >
                   没有找到结果

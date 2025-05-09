@@ -22,9 +22,10 @@ import { useEffect, useState } from "react"
 
 interface BatchUserCreateFormProps {
   onSuccess?: () => Promise<void>;
+  collection?: string;
 }
 
-export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
+export function BatchUserCreateForm({ onSuccess, collection = 'baidu_edu_users' }: BatchUserCreateFormProps) {
   const [xufeiType, setXufeiType] = useState("day")
   const [days, setDays] = useState(1)
   
@@ -178,7 +179,7 @@ export function BatchUserCreateForm({ onSuccess }: BatchUserCreateFormProps) {
                 for (let i = 0; i < count; i++) {
                   const currentNum = startNum + i;
                   const userName = `${prefix}-${currentNum}`;
-                  await pb.collection('baidu_edu_users').create({
+                  await pb.collection(collection).create({
                     name: userName,
                     remark: remark,
                     exp_time: expTime.toISOString(),

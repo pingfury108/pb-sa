@@ -21,9 +21,10 @@ import { useEffect, useState } from "react"
 
 interface UserCreateFormProps {
   onSuccess?: () => Promise<void>;
+  collection?: string;
 }
 
-export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
+export function UserCreateForm({ onSuccess, collection = 'baidu_edu_users' }: UserCreateFormProps) {
   const [xufeiType, setXufeiType] = useState("day")
   const [days, setDays] = useState(1)
   
@@ -119,7 +120,7 @@ export function UserCreateForm({ onSuccess }: UserCreateFormProps) {
               expTime.setDate(expTime.getDate() + days);
 
               try {
-                await pb.collection('baidu_edu_users').create({
+                await pb.collection(collection).create({
                   name: nameInput.value,
                   remark: remarkInput.value,
                   exp_time: expTime.toISOString(),
